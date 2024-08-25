@@ -14,7 +14,7 @@ import 'src/lazy_data_table_theme.dart';
 /// Create a lazily loaded data table.
 ///
 /// The table is [columns] by [rows] big.
-/// The [topHeaderBuilder], [leftHeaderBuilder], [rightHeaderBuiler] and [bottomHeaderBuilder] are optional,
+/// The [topHeaderBuilder], [leftHeaderBuilder], [rightHeaderBuilder], and [bottomHeaderBuilder] are optional,
 /// and the corner widget should only be given if the two headers next to that corner are given.
 class LazyDataTable extends StatefulWidget {
   LazyDataTable({
@@ -166,17 +166,20 @@ class _LazyDataTableState extends State<LazyDataTable>
       onPointerSignal: (pointerSignal) {
         if (pointerSignal is PointerScrollEvent) {
           jump(pointerSignal.scrollDelta.dx, pointerSignal.scrollDelta.dy);
+          print('Pointer scroll event: ${pointerSignal.scrollDelta}');
         }
       },
       child: GestureDetector(
         onPanUpdate: (DragUpdateDetails details) {
           jump(-details.delta.dx, -details.delta.dy);
+          print('Pan update: ${details.delta}');
         },
         onPanEnd: (DragEndDetails details) {
           _verticalControllers!
               .setVelocity(-details.velocity.pixelsPerSecond.dy / 100);
           _horizontalControllers!
               .setVelocity(-details.velocity.pixelsPerSecond.dx / 100);
+          print('Pan end with velocity: ${details.velocity.pixelsPerSecond}');
         },
 
         /// main container
@@ -273,57 +276,62 @@ class _LazyDataTableState extends State<LazyDataTable>
                   // Main data
                   Expanded(
                     // List of rows
-                    child: ReorderableListView.builder(
-                        onReorder: (oldIndex, newIndex) {
-                          print(oldIndex);
-                          print(newIndex);
-                        },
-                        scrollDirection: Axis.vertical,
-                        shrinkWrap: true,
-                        scrollController: _verticalControllers,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: widget.rows,
-                        itemBuilder: (_, i) {
-                          // Single row
-                          return SizedBox(
-                            key: ValueKey(i),
-                            height: widget.tableDimensions.customCellHeight
-                                    .containsKey(i)
-                                ? widget.tableDimensions.customCellHeight[i]
-                                : widget.tableDimensions.cellHeight,
-                            child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                controller: _horizontalControllers,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: widget.columns,
-                                itemBuilder: (__, j) {
-                                  return Container(
-                                    height: widget
-                                            .tableDimensions.customCellHeight
-                                            .containsKey(i)
-                                        ? widget
-                                            .tableDimensions.customCellHeight[i]
-                                        : widget.tableDimensions.cellHeight,
-                                    width: widget
-                                            .tableDimensions.customCellWidth
-                                            .containsKey(j)
-                                        ? widget
-                                            .tableDimensions.customCellWidth[j]
-                                        : widget.tableDimensions.cellWidth,
-                                    decoration:
-                                        (widget.tableTheme.alternateRow &&
-                                                    i % 2 != 0) ||
-                                                (widget.tableTheme
-                                                        .alternateColumn &&
-                                                    j % 2 != 0)
-                                            ? widget.tableTheme.alternateCell
-                                            : widget.tableTheme.cell,
-                                    child: widget.dataCellBuilder(i, j),
-                                  );
-                                }),
-                          );
-                        }),
+                    child: ListView.builder(
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      controller: _verticalControllers,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: widget.rows,
+                      itemBuilder: (_, i) {
+                        // Single row
+                        return SizedBox(
+                          height: widget.tableDimensions.customCellHeight
+                                  .containsKey(i)
+                              ? widget.tableDimensions.customCellHeight[i]
+                              : widget.tableDimensions.cellHeight,
+                          child: ReorderableListView.builder(
+                            key:
+                                ValueKey(i), // Key for each ReorderableListView
+                            onReorder: (oldIndex, newIndex) {
+                              setState(() {
+                                if (newIndex > oldIndex) {
+                                  newIndex -= 1;
+                                }
+                                print('Reordered from $oldIndex to $newIndex');
+                                // Implement the logic for reordering the data here
+                                // Update your data source accordingly
+                              });
+                            },
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            scrollController: _horizontalControllers,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: widget.columns,
+                            itemBuilder: (__, j) {
+                              return Container(
+                                key: ValueKey(
+                                    'cell_${i}_$j'), // Unique key for each item
+                                height: widget.tableDimensions.customCellHeight
+                                        .containsKey(i)
+                                    ? widget.tableDimensions.customCellHeight[i]
+                                    : widget.tableDimensions.cellHeight,
+                                width: widget.tableDimensions.customCellWidth
+                                        .containsKey(j)
+                                    ? widget.tableDimensions.customCellWidth[j]
+                                    : widget.tableDimensions.cellWidth,
+                                decoration: (widget.tableTheme.alternateRow &&
+                                            i % 2 != 0) ||
+                                        (widget.tableTheme.alternateColumn &&
+                                            j % 2 != 0)
+                                    ? widget.tableTheme.alternateCell
+                                    : widget.tableTheme.cell,
+                                child: widget.dataCellBuilder(i, j),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   // Bottom header
                   widget.bottomHeaderBuilder != null
@@ -495,7 +503,7 @@ class _CustomScrollController extends ScrollController {
     _positions.add(position);
   }
 
-  /// Removes given [ScrollPostion] from the list.
+  /// Removes given [ScrollPosition] from the list.
   @override
   void detach(ScrollPosition position) {
     _positions.remove(position);
