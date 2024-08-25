@@ -1,23 +1,18 @@
 library lazy_data_table;
 
-export 'src/lazy_data_table_dimensions.dart';
-export 'src/lazy_data_table_theme.dart';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
-
-import 'src/lazy_data_table_dimensions.dart';
-import 'src/lazy_data_table_theme.dart';
+import 'package:lazy_data_table/lazy_data_table.dart';
 
 /// Create a lazily loaded data table.
 ///
 /// The table is [columns] by [rows] big.
 /// The [topHeaderBuilder], [leftHeaderBuilder], [rightHeaderBuiler] and [bottomHeaderBuilder] are optional,
 /// and the corner widget should only be given if the two headers next to that corner are given.
-class LazyDataTable extends StatefulWidget {
-  LazyDataTable({
+class LazyOnOrderDataTable extends StatefulWidget {
+  LazyOnOrderDataTable({
     Key? key,
     // Number of data columns.
     required this.columns,
@@ -42,7 +37,7 @@ class LazyDataTable extends StatefulWidget {
 
     // Builder function for the bottom header.
     this.bottomHeaderBuilder,
-
+    required this.onReorder,
     // Builder function for the data cell.
     required this.dataCellBuilder,
 
@@ -99,6 +94,8 @@ class LazyDataTable extends StatefulWidget {
   final LazyDataTableTheme tableTheme;
 
   // Builder functions
+  final void Function(int, int) onReorder;
+
   /// The builder function for a top header.
   final Widget Function(int columnIndex)? topHeaderBuilder;
 
@@ -140,7 +137,7 @@ class LazyDataTable extends StatefulWidget {
   }
 }
 
-class _LazyDataTableState extends State<LazyDataTable>
+class _LazyDataTableState extends State<LazyOnOrderDataTable>
     with TickerProviderStateMixin {
   _CustomScrollController? _horizontalControllers;
   _CustomScrollController? _verticalControllers;
@@ -273,15 +270,29 @@ class _LazyDataTableState extends State<LazyDataTable>
                   // Main data
                   Expanded(
                     // List of rows
-                    child: ListView.builder(
+                    child: ReorderableListView.builder(
+                        key: ValueKey(3),
+                        buildDefaultDragHandles: true,
+                        onReorder: (oldIndex, newIndex) {
+                          setState(() {
+                            if (newIndex > oldIndex) {
+                              newIndex -= 1;
+                            }
+                            print('Reordered from $oldIndex to $newIndex');
+                            // Implement the logic for reordering the data here
+                            // Update your data source accordingly
+                          });
+                        },
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
-                        controller: _verticalControllers,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: ClampingScrollPhysics(),
+                        scrollController: _verticalControllers,
+                        // physics: NeverScrollableScrollPhysics(),
                         itemCount: widget.rows,
                         itemBuilder: (_, i) {
                           // Single row
                           return SizedBox(
+                            key: ValueKey('cell_${i}_'),
                             height: widget.tableDimensions.customCellHeight
                                     .containsKey(i)
                                 ? widget.tableDimensions.customCellHeight[i]
