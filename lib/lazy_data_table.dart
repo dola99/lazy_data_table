@@ -286,6 +286,7 @@ class _LazyDataTableState extends State<LazyDataTable>
                         itemBuilder: (_, i) {
                           // Single row
                           return SizedBox(
+                            key: ValueKey(i),
                             height: widget.tableDimensions.customCellHeight
                                     .containsKey(i)
                                 ? widget.tableDimensions.customCellHeight[i]
