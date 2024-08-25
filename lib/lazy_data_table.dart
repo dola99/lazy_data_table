@@ -273,10 +273,14 @@ class _LazyDataTableState extends State<LazyDataTable>
                   // Main data
                   Expanded(
                     // List of rows
-                    child: ListView.builder(
+                    child: ReorderableListView.builder(
+                        onReorder: (oldIndex, newIndex) {
+                          print(oldIndex);
+                          print(newIndex);
+                        },
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
-                        controller: _verticalControllers,
+                        scrollController: _verticalControllers,
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: widget.rows,
                         itemBuilder: (_, i) {
