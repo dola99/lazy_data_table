@@ -274,6 +274,7 @@ class _LazyDataTableState extends State<LazyDataTable>
                   Expanded(
                     // List of rows
                     child: ReorderableListView.builder(
+                        key: ValueKey(2),
                         onReorder: (oldIndex, newIndex) {
                           setState(() {
                             if (newIndex > oldIndex) {
