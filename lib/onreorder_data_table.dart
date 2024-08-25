@@ -273,16 +273,7 @@ class _LazyDataTableState extends State<LazyOnOrderDataTable>
                     child: ReorderableListView.builder(
                         key: ValueKey(3),
                         buildDefaultDragHandles: true,
-                        onReorder: (oldIndex, newIndex) {
-                          setState(() {
-                            if (newIndex > oldIndex) {
-                              newIndex -= 1;
-                            }
-                            print('Reordered from $oldIndex to $newIndex');
-                            // Implement the logic for reordering the data here
-                            // Update your data source accordingly
-                          });
-                        },
+                        onReorder: widget.onReorder,
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
                         physics: ClampingScrollPhysics(),
